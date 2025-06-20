@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Parking Code</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f0f0f0;
+        }
+        .barcode-container {
+            text-align: center;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #barcode {
+            max-width: 300px;
+            height: auto;
+        }
+        #number {
+            font-size: 24px;
+            color: #333;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        .error {
+            color: #d32f2f;
+            font-size: 18px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="barcode-container">
+        <h1>Parking Code:</h1>
+        <img id="barcode" src="" alt="Code 128 Barcode" aria-live="polite">
+        <div id="number" aria-live="polite"></div>
+        <div id="error" class="error" aria-live="assertive"></div>
+    </div>
+    <script>
+        // Function to validate APCS format (APCS followed by 3 to 16 digits)
+        function isValidAPCSFormat(str) {
+            return /^APCS\d{3,16}$/.test(str);
+        }
+
+        // Get the number from the URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const inputNumber = urlParams.get('Number') || '';
+
+        const numberElement = document.getElementById('number');
+        const barcodeElement = document.getElementById('barcode');
+        const errorElement = document.getElementById('error');
+
+        // Display the number and barcode
+        if (inputNumber && isValidAPCSFormat(inputNumber)) {
+            numberElement.textContent = inputNumber;
+            const barcodeUrl = `https://barcodeapi.org/api/128/${encodeURIComponent(inputNumber)}`;
+            barcodeElement.src = barcodeUrl;
+
+            // Handle image load errors
+            barcodeElement.onerror = () => {
+                barcodeElement.alt = 'Failed to load barcode';
+                errorElement.textContent = 'Error: Could not generate barcode. Please try again.';
+            };
+            barcodeElement.onload = () => {
+                barcodeElement.alt = `Code 128 Barcode for ${inputNumber}`;
+                errorElement.textContent = '';
+            };
+        } else {
+            numberElement.textContent = inputNumber || 'Not provided';
+            barcodeElement.alt = 'No barcode available';
+            errorElement.textContent = inputNumber
+                ? 'Error: Invalid format.'
+                : 'Error: No number provided in URL.';
+        }
+    </script>
+</body>
+</html>
