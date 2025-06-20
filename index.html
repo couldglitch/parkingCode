@@ -48,7 +48,7 @@
     <script>
         // Function to validate APCS format (APCS followed by 3 to 16 digits)
         function isValidAPCSFormat(str) {
-            return /^APCS\d{3,16}$/.test(str);
+            return /^APCS\d{1,16}$/.test(str);
         }
 
         // Get the number from the URL query parameter
