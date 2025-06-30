@@ -24,6 +24,7 @@
         #barcode {
             max-width: 300px;
             height: auto;
+            width: 100%;
         }
         #number {
             font-size: 24px;
@@ -36,50 +37,81 @@
             font-size: 18px;
             margin-top: 10px;
         }
+        .loading {
+            font-size: 18px;
+            color: #555;
+            margin-top: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="barcode-container">
         <h1>Parking Code:</h1>
-        <img id="barcode" src="" alt="Code 128 Barcode" aria-live="polite">
+        <img id="barcode" src="" alt="No barcode generated" aria-live="polite">
         <div id="number" aria-live="polite"></div>
         <div id="error" class="error" aria-live="assertive"></div>
+        <div id="loading" class="loading"></div>
     </div>
     <script>
-        // Function to validate APCS format (APCS followed by 3 to 16 digits)
+        // Function to validate APCS format (APCS followed by 1 to 16 digits, no leading zero)
         function isValidAPCSFormat(str) {
-            return /^APCS\d{1,16}$/.test(str);
+            return /^APCS[1-9]\d{0,15}$/.test(str);
+        }
+
+        // Sanitize input to prevent XSS
+        function sanitizeInput(input) {
+            return input.replace(/[<>&'"]/g, '');
         }
 
         // Get the number from the URL query parameter
         const urlParams = new URLSearchParams(window.location.search);
-        const inputNumber = urlParams.get('ReferenceNumber') || '';
+        const inputNumber = sanitizeInput(urlParams.get('ReferenceNumber') || '');
 
         const numberElement = document.getElementById('number');
         const barcodeElement = document.getElementById('barcode');
         const errorElement = document.getElementById('error');
+        const loadingElement = document.getElementById('loading');
 
-        // Display the number and barcode
-        if (inputNumber && isValidAPCSFormat(inputNumber)) {
+        // Main logic
+        if (inputNumber) {
+            console.log('Input number:', inputNumber);
             numberElement.textContent = inputNumber;
-            const barcodeUrl = `https://barcodeapi.org/api/128/${encodeURIComponent(inputNumber)}`;
-            barcodeElement.src = barcodeUrl;
+            if (isValidAPCSFormat(inputNumber)) {
+                console.log('Valid input, attempting app redirect...');
+                loadingElement.textContent = 'Attempting to open app...';
+                // Attempt app redirect
+                window.location.href = `myapp://open?Room=${encodeURIComponent(inputNumber)}`;
 
-            // Handle image load errors
-            barcodeElement.onerror = () => {
-                barcodeElement.alt = 'Failed to load barcode';
-                errorElement.textContent = 'Error: Could not generate barcode. Please try again.';
-            };
-            barcodeElement.onload = () => {
-                barcodeElement.alt = `Code 128 Barcode for ${inputNumber}`;
-                errorElement.textContent = '';
-            };
+                // Fallback to barcode display after 1.5 seconds
+                setTimeout(() => {
+                    console.log('App redirect failed, loading barcode...');
+                    loadingElement.textContent = 'Generating barcode...';
+                    const barcodeUrl = `https://barcodeapi.org/api/128/${encodeURIComponent(inputNumber)}`;
+
+                    fetch(barcodeUrl)
+                        .then(response => {
+                            if (!response.ok) throw new Error('API request failed');
+                            console.log('Barcode loaded successfully');
+                            barcodeElement.src = barcodeUrl;
+                            barcodeElement.alt = `Code 128 Barcode for ${inputNumber}`;
+                            errorElement.textContent = '';
+                            loadingElement.textContent = '';
+                        })
+                        .catch(err => {
+                            console.error('Barcode fetch error:', err);
+                            barcodeElement.alt = 'Failed to load barcode';
+                            errorElement.textContent = 'Error: Could not generate barcode. Please try again.';
+                            loadingElement.textContent = '';
+                        });
+                }, 1500);
+            } else {
+                console.log('Invalid format:', inputNumber);
+                errorElement.textContent = 'Error: Invalid format. Must be APCS followed by 1-16 digits.';
+            }
         } else {
-            numberElement.textContent = inputNumber || 'Not provided';
-            barcodeElement.alt = 'No barcode available';
-            errorElement.textContent = inputNumber
-                ? 'Error: Invalid format.'
-                : 'Error: No number provided in URL.';
+            console.log('No input number provided');
+            numberElement.textContent = 'Not provided';
+            errorElement.textContent = 'Error: No number provided in URL.';
         }
     </script>
 </body>
