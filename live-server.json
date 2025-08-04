@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/index.html/data",
+      "destination": "/index.html"
+    }
+  ]
+}
