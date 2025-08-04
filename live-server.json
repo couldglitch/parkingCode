@@ -1,9 +1,0 @@
-{
-  "rewrites": [
-    {
-      "source": "/register.html/**",
-      "destination": "/register.html"
-    }
-  ]
-
-}
