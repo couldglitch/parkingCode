@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API</title>
+    <script>
+        async function getResponse() {
+            const params = new URLSearchParams(window.location.search);
+            const apiKey = params.get('api_key');
+            
+            if (!apiKey) {
+                document.body.textContent = JSON.stringify({
+                    error: "Missing api_key parameter",
+                    timestamp: new Date().toISOString()
+                }, null, 2);
+                return;
+            }
+
+            params.delete('api_key');
+            const url = `https://script.google.com/macros/s/${apiKey}/exec?${params.toString()}`;
+
+            try {
+                const response = await fetch(url, { redirect: 'follow' });
+                const responseText = await response.text();
+                
+                try {
+                    // If response is valid JSON, display it directly
+                    const jsonResponse = JSON.parse(responseText);
+                    document.body.textContent = JSON.stringify(jsonResponse, null, 2);
+                } catch {
+                    // If response isn't JSON, wrap it in a JSON structure
+                    document.body.textContent = JSON.stringify({
+                        response: responseText,
+                        status: response.status,
+                        timestamp: new Date().toISOString()
+                    }, null, 2);
+                }
+            } catch (error) {
+                document.body.textContent = JSON.stringify({
+                    error: error.message,
+                    type: error.name,
+                    timestamp: new Date().toISOString()
+                }, null, 2);
+            }
+        }
+
+        window.onload = getResponse;
+    </script>
+</head>
+<body>
+    <pre>Loading response...</pre>
+</body>
+</html>
