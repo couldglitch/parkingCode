@@ -1,6 +1,4 @@
-document.addEventListener('contextmenu', function(event) {
-  event.preventDefault();
-});
+
 async function getGoogleAppsScriptResponse() {
     const params = new URLSearchParams(window.location.search);
     const apiKey = params.get('api_key');
