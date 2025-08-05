@@ -1,12 +1,23 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API</title>
-    <script src="script.js" defer></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Redirect to Google Apps Script</title>
 </head>
 <body>
-    <p id="response"></p>
+  <script>
+    // Get query parameters from the current URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const apiKey = urlParams.get('api_key');
+    const cmd = urlParams.get('cmd');
+    const cell = urlParams.get('cell');
+
+    // Construct the redirect URL
+    const redirectUrl = `https://script.google.com/macros/s/${apiKey}/exec?cmd=${cmd}&cell=${cell}`;
+
+    // Perform the redirect
+    window.location.replace(redirectUrl);
+  </script>
 </body>
 </html>
